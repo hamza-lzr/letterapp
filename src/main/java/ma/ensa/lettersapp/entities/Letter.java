@@ -29,12 +29,10 @@ public class Letter {
     @Column(nullable = false)
     private String title;
 
-    @Lob
     @Column(nullable = false)
     private String content;
 
     @Column(nullable = false)
     private LocalDateTime sentAt;
 
-    private LocalDateTime readAt;
 }

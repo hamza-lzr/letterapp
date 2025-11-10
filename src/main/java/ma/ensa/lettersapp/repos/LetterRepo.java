@@ -12,4 +12,5 @@ public interface LetterRepo extends JpaRepository<Letter, Long> {
 
     List<Letter> findBySenderOrRecipientOrderBySentAtDesc(User sender, User recipient);
 
+    List<Letter> findBySender(User sender);
 }

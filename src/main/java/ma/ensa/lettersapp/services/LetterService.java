@@ -41,8 +41,8 @@ public class LetterService {
         }
 
         Letter newLetter = new Letter();
-        newLetter.setSender(sender);
-        newLetter.setRecipient(recipient);
+        newLetter.setSender(userRepository.findByUsername(letterDto.getSenderUsername()));
+        newLetter.setRecipient(userRepository.findByUsername(letterDto.getRecipientUsername()));
         newLetter.setTitle(letterDto.getTitle());
         newLetter.setContent(letterDto.getContent());
         newLetter.setSentAt(LocalDateTime.now());
@@ -52,27 +52,27 @@ public class LetterService {
 
     public List<Letter> getUserHistory(String username) {
         User user = userRepository.findByUsername(username);
-        return letterRepository.findBySenderOrRecipientOrderBySentAtDesc(user, user);
+        return letterRepository.findBySender(user);
     }
 
-    @Transactional
-    public Optional<Letter> markAsRead(Long letterId, String username) {
-        Optional<Letter> optionalLetter = letterRepository.findById(letterId);
+    public List<Letter> getAllLettersBySender(String username) {
         User user = userRepository.findByUsername(username);
+        return letterRepository.findBySender(user);
 
-        if (optionalLetter.isPresent() && user != null) {
-            Letter letter = optionalLetter.get();
-
-            if (!letter.getRecipient().equals(user)) {
-                return Optional.empty();
-            }
-
-            if (letter.getReadAt() == null) {
-                letter.setReadAt(LocalDateTime.now());
-                return Optional.of(letterRepository.save(letter));
-            }
-            return Optional.of(letter);
-        }
-        return Optional.empty();
     }
+
+    public List<Letter> getAllLettersByRecipient(String username) {
+        User user = userRepository.findByUsername(username);
+        return letterRepository.findBySender(user);
+    }
+
+    public Optional<Letter> markAsRead(Long letterId) {
+        Letter letter = letterRepository.findById(letterId).orElse(null);
+        if (letter == null) {
+            return Optional.empty();
+        }
+        return Optional.of(letter);
+    }
+
+
 }

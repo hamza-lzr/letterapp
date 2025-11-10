@@ -28,7 +28,7 @@ public class LetterController {
 
     @PostMapping
     @CrossOrigin(origins = "*")
-    public ResponseEntity<Letter> sendLetter(@RequestBody LetterDTO letterDto, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity sendLetter(@RequestBody LetterDTO letterDto, @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Letter savedLetter = letterService.sendLetter(letterDto, userDetails.getUsername());
             return new ResponseEntity<>(savedLetter, HttpStatus.CREATED);
@@ -39,16 +39,40 @@ public class LetterController {
 
     @CrossOrigin(origins = "*")
     @GetMapping("/history")
-    public ResponseEntity<List<Letter>> getUserHistory(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<LetterDTO>> getUserHistory(@AuthenticationPrincipal UserDetails userDetails) {
         List<Letter> letters = letterService.getUserHistory(userDetails.getUsername());
-        return ResponseEntity.ok(letters);
+        List<LetterDTO> lettersDTOs = letters.stream().map(letter -> {
+            LetterDTO dto = new LetterDTO();
+            dto.setId(letter.getId());
+            dto.setSenderUsername(letter.getSender().getUsername());
+            dto.setRecipientUsername(letter.getRecipient().getUsername());
+            dto.setTitle(letter.getTitle());
+            dto.setContent(letter.getContent());
+            dto.setSentAt(letter.getSentAt().toString());
+            return dto;
+        }).toList();
+        return ResponseEntity.ok(lettersDTOs);
     }
 
     @CrossOrigin(origins = "*")
     @PatchMapping("/{letterId}/read")
-    public ResponseEntity<Letter> markAsRead(@PathVariable Long letterId, @AuthenticationPrincipal UserDetails userDetails) {
-        return letterService.markAsRead(letterId, userDetails.getUsername())
+    public ResponseEntity<Letter> markAsRead(@PathVariable Long letterId) {
+        return letterService.markAsRead(letterId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @CrossOrigin(origins = "*")
+    @GetMapping("/all/sender")
+    public ResponseEntity<List<Letter>> getAllLetters(@AuthenticationPrincipal UserDetails userDetails) {
+        List<Letter> letters = letterService.getAllLettersBySender(userDetails.getUsername());
+        return ResponseEntity.ok(letters);
+    }
+
+    @CrossOrigin(origins = "*")
+    @GetMapping("/all/recipient")
+    public ResponseEntity<List<Letter>> getAllLettersByRecipient(@AuthenticationPrincipal UserDetails userDetails) {
+        List<Letter> letters = letterService.getAllLettersByRecipient(userDetails.getUsername());
+        return ResponseEntity.ok(letters);
     }
 }
